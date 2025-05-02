@@ -1,0 +1,10 @@
+rawdata/*
+outputs/*
+code_references/*
+logs/*
+nohup-out/*
+scripts/*
+tmp/*
+source/docker-compose/*
+.snakemake/*
+references/
