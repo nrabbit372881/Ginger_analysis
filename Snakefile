@@ -48,3 +48,28 @@ rule ncbi_dload_dehydrated: # dehydrated 模式比較容易 resume 或重跑，�
                 2> {log} \
                 1> {log} 
         """
+
+rule ncbi_rehydrate:
+    input:
+        fin="references/ncbi_dataset.zip"
+    output:
+        dout=directory("references/ncbi_dataset/data")
+    log:
+        "logs/ncbi-dataset/ncbi_rehydrate.log"
+    shell:
+        # line 62: 將 {input.fin} 這個 zip 檔解壓縮到它所在的資料夾中；如果檔案已存在則只在需要時更新（-u）；-d 後面接的是目標資料夾路徑，最後要加上要解壓的 zip 檔案路徑。
+        r"""
+        unzip -u -d $(dirname {input.fin}) {input.fin}
+
+        docker run \
+            {docker_mount_opt} \
+            --rm \
+            -u $(id -u) \
+            --name ncbi_rehydrate \
+            ccc/ncbi-datasets:20230926 \
+                datasets rehydrate \
+                    --directory $(dirname {input.fin}) \
+                2> {log} \
+                1> {log}
+        """
+               
