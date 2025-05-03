@@ -3,7 +3,7 @@ configfile: "configs/config.json"
 # configure docker mounting options
 # ==============================================================================
 docker_mount_opt = ""
-for volum in config["volumes"]:
+for volume in config["volumes"]:
     docker_mount_opt += "-v %s:%s:%s " % (volume["real"], volume["virtual"], volume["mode"])
     
     if volume["is_workdir"]:
@@ -28,18 +28,23 @@ rule ncbi_dload_dehydrated: # dehydrated 模式比較容易 resume 或重跑，�
     log:
         "logs/ncbi-dataset/ncbi_dload_dehydrated.log"
     shell:
-        """
-        mkdir -p $(dirname {output.fullname}) # dirname 是一個 bash 指令，用來從完整路徑中取出「所在的資料夾」，references/ncbi_dataset.zip的references。
+        # line 37: dirname 是一個 bash 指令，用來從完整路徑中取出「所在的資料夾」，references/ncbi_dataset.zip的references。
+        # line 41: 用我的id跑才不會超出權限
+        # line 43: 本機先下載（pull）ccc/ncbi-datasets:20230926 這個 Docker image，然後根據這個 image 啟動出一個新的容器，並加上 docker_mount_opt 的 volume 掛載。
+        # line 44: 我要docker執行的command
+        # line 45 & 46: 1是將 stdout 寫入；2是將 stderr。  寫入兩者等同 &> {log}
+        r"""
+        mkdir -p $(dirname {output.fullname}) 
         docker run \
             {docker_mount_opt} \
             --rm \
-            -u $(id -u) \ # 用我的id跑才不會超出權限
-            --name ncbi_dload_dehydrated \ 
-            ccc/ncbi-datasets:20230926 \ #本機先下載（pull）ccc/ncbi-datasets:20230926 這個 Docker image，然後根據這個 image 啟動出一個新的容器，並加上 docker_mount_opt 的 volume 掛載。
-                datasets download genome accession GCF_018446385.1 \ # 我要執行的command
+            -u $(id -u) \
+            --name ncbi_dload_dehydrated \
+            ccc/ncbi-datasets:20230926 \
+                datasets download genome accession GCF_018446385.1 \
                     --include gff3,gtf,genome,seq-report \
                     --filename {output.fullname} \
                     --dehydrated \
                 2> {log} \
-                1> {log} #等同 &> {log}
+                1> {log} 
         """
