@@ -72,4 +72,19 @@ rule ncbi_rehydrate:
                 2> {log} \
                 1> {log}
         """
-               
+
+rule remove_ambigous: # 自己找不到，不需要看是怎麼找的
+    input:
+        "references/ncbi_dataset/data/GCF_018446385.1/genomic.gtf"
+    output:
+        "references/ncbi_dataset/data/GCF_018446385.1/genomic_modified.gtf"
+    log:
+        "logs/ncbi-dataset/remove_ambigous.log"
+    shell:
+        """
+        grep -v F6E76_pgp044 {input} > {output}
+
+        echo "Ambigous gene:" > {log}
+        grep F6E76_pgp044 {input} >> {log}
+        """
+
