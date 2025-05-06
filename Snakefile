@@ -7,7 +7,7 @@ for volume in config["volumes"]:
     docker_mount_opt += "-v %s:%s:%s " % (volume["real"], volume["virtual"], volume["mode"])
     
     if volume["is_workdir"]:
-        docker_mount_opt += "-w %s " % volume["virtual"] ##what if is_workdir is not true?
+        docker_mount_opt += "-w %s " % volume["virtual"]
 
 # define query function(設計一個尋找用的函數)
 # ==============================================================================
@@ -88,7 +88,7 @@ rule remove_ambigous: # 自己找不到，不需要看是怎麼找的
         grep F6E76_pgp044 {input} >> {log}
         """
 
-# QC
+# QC 將目標fastq.gz檔案進行質量控制
 # ==============================================================================
 rule fastp:
     threads: 4
