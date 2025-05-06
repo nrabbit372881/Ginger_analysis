@@ -88,3 +88,47 @@ rule remove_ambigous: # 自己找不到，不需要看是怎麼找的
         grep F6E76_pgp044 {input} >> {log}
         """
 
+# QC
+# ==============================================================================
+rule fastp:
+    threads: 4
+    input:
+        in1=lambda wildcards: query(id=wildcards.id)["fq1"],
+        in2=lambda wildcards: query(id=wildcards.id)["fq2"],
+    output:
+        out1="outputs/afqc/{id}/{id}_1.fastq.gz",
+        out2="outputs/afqc/{id}/{id}_2.fastq.gz",
+        report_json="outputs/afqc/{id}/fastp.json",
+        report_html="outputs/afqc/{id}/fastp.html"
+    params: #  fastp的QC參數: --detect_adapter_for_pe自動偵測paired-end的adapter；--correction對重疊區域做錯誤校正；--cut_front去除前端低品質序列；--cut_tail去除尾端低品質序列；--disable_trim_poly_g不修剪PolyG tail（適用於非 Illumina NovaSeq）
+        flags=" ".join([
+            "--detect_adapter_for_pe",
+            "--correction",
+            "--cut_front",
+            "--cut_tail",
+            "--disable_trim_poly_g"
+        ])
+    log:
+        "logs/fastp/{id}.log"
+    shell:
+# line 123: fastp 的 image
+# line 125: 加入上面那些參數
+# lines 126-131: output的路徑
+        """
+        docker run \
+            {docker_mount_opt} \
+            --rm \
+            -u $(id -u) \
+            --name fastp_{wildcards.id} \
+            biocontainers/fastp:v0.20.1_cv1 \
+                fastp \
+                    {params.flags} \
+                    --in1 {input.in1} \
+                    --in2 {input.in2} \
+                    --out1 {output.out1} \
+                    --out2 {output.out2} \
+                    --json {output.report_json} \
+                    --html {output.report_html} \
+                1> {log} \
+                2> {log} 
+        """
