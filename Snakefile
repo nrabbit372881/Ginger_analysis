@@ -83,7 +83,7 @@ rule remove_ambigous: # 自己找不到，不需要看是怎麼找的
     shell:
         """
         grep -v F6E76_pgp044 {input} > {output}
-
+        
         echo "Ambigous gene:" > {log}
         grep F6E76_pgp044 {input} >> {log}
         """
@@ -93,8 +93,10 @@ rule remove_ambigous: # 自己找不到，不需要看是怎麼找的
 rule fastp:
     threads: 4
     input:
-        in1=lambda wildcards: query(id=wildcards.id)["fq1"],
-        in2=lambda wildcards: query(id=wildcards.id)["fq2"],
+        in1=lambda wildcards: query(id=wildcards.id)["fq1"].replace(
+        "/home/woodydrylab/YCLlab_raw_data/.../01.RawData", "/rawdata"),
+        in2=lambda wildcards: query(id=wildcards.id)["fq2"].replace(
+        "/home/woodydrylab/YCLlab_raw_data/.../01.RawData", "/rawdata"),
     output:
         out1="outputs/afqc/{id}/{id}_1.fastq.gz",
         out2="outputs/afqc/{id}/{id}_2.fastq.gz",
@@ -131,4 +133,109 @@ rule fastp:
                     --html {output.report_html} \
                 1> {log} \
                 2> {log} 
+        """
+
+# The GTF file might be corrupted!
+# Stop at line : NC_044775.1      RefSeq  transcript      73009   148317  .       ?       .       gene_id "F6E76_pgp044"; transcript_id "unassigned_transcript_1917"; exception "trans-splicing"; gbkey "mRNA"; gene "rps12"; locus_tag "F6E76_pgp044"; transcript_biotype "mRNA"; 
+# Error Message: Strand is neither '+' nor '-'!
+rule filter_gtf_strand:### 因為出現了上面錯誤，這個rule是用來過濾掉gtf檔案中strand不是+或-的行
+    input:
+        "references/ncbi_dataset/data/GCF_018446385.1/genomic.gtf"
+    output:
+        "references/ncbi_dataset/data/GCF_018446385.1/genomic.filtered.gtf"
+    log:
+        "logs/rsem/filter_gtf_strand.log"
+    shell:
+        """
+        grep -v $'\t?\\t' {input} > {output} 2> {log}
+        """
+
+# According to the GTF file given, transcript unassigned_transcript_1917 has exons from different orientations!
+### 理論上應該不能直接刪掉？要記得問出現這個狀況的處理方式
+rule filter_unassigned_transcript:
+    input:
+        "references/ncbi_dataset/data/GCF_018446385.1/genomic.filtered.gtf"
+    output:
+        "references/ncbi_dataset/data/GCF_018446385.1/genomic.finished.gtf"
+    log:
+        "logs/rsem/filter_unassigned_transcript.log"
+    shell:
+        """
+        grep -v 'unassigned_transcript_1917' {input} > {output} 2> {log}
+        """
+
+
+# RSEM quantification
+# ==============================================================================
+
+rule rsem_prep_ref: # 把參考基因組的fasta和gtf檔案轉成RSEM的專用index
+    threads: 4
+    conda:
+        "envs/2023aut_ginger.yaml"
+    input:
+        gtf="references/ncbi_dataset/data/GCF_018446385.1/genomic.finished.gtf",
+        fa="references/ncbi_dataset/data/GCF_018446385.1/GCF_018446385.1_Zo_v1.1_genomic.fna"
+    output:
+        dout=directory("references/rsem")
+    params:
+        ref_prefix="references/rsem/rsem"
+    log:
+        "logs/rsem/rsem_prep_ref.log"
+    shell:
+        # line 195: 讓 RSEM 知道 bowtie2 這個程式在哪裡
+        # line 196: 指定基因註解檔的路徑
+        # line 198: 指定 genome fasta 檔的路徑
+        # line 199: 指定輸出的檔名前綴和路徑
+        """
+        mkdir -p {output.dout}
+
+        rsem-prepare-reference \
+            --num-threads {threads} \
+            --bowtie2 \
+            --bowtie2-path $(dirname $(which bowtie2)) \
+            --gtf {input.gtf} \
+            --polyA \
+            {input.fa} \
+            {params.ref_prefix} \
+            2>&1 \
+            > {log}
+        """
+
+rule rsem_cal_exp:
+    threads: 12
+    conda:
+        "env/2023aut_ginger.yaml"
+    input:
+        ref_dir="references/rsem/",
+        fq1="outputs/afqc/{id}/{id}_1.fastq.gz",
+        fq2="outputs/afqc/{id}/{id}_2.fastq.gz",
+    output:
+        dout=directory("outputs/rsem-cal-expr/{id}"),
+        gene_res="outputs/rsem-cal-expr/{id}/{id}.genes.results"
+    params:
+        ref_prefix="references/rsem/rsem",
+        output_prefix=lambda wildcards: f"outputs/rsem-cal-expr/{wildcards.id}/{wildcards.id}",
+        unused_flags=" ".join(
+            ["--strand-specific",]
+        )
+    log:
+        "logs/rsem/rsem_cal_exp/{id}.log"
+    shell:
+        """
+        # create output directory
+        mkdir -p $(dirname {output})
+
+        # calculate expression
+        rsem-calculate-expression \
+            --paired-end \
+            --num-threads {threads} \
+            --bowtie2 \
+            --bowtie2-path $(dirname $(which bowtie2)) \
+            --time \
+            {input.fq1} \
+            {input.fq2} \
+            {params.ref_prefix} \
+            {params.output_prefix} \
+        2>&1 \
+        > {log}
         """
