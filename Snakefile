@@ -93,10 +93,8 @@ rule remove_ambigous: # 自己找不到，不需要看是怎麼找的
 rule fastp:
     threads: 4
     input:
-        in1=lambda wildcards: query(id=wildcards.id)["fq1"].replace(
-        "/home/woodydrylab/YCLlab_raw_data/.../01.RawData", "/rawdata"),
-        in2=lambda wildcards: query(id=wildcards.id)["fq2"].replace(
-        "/home/woodydrylab/YCLlab_raw_data/.../01.RawData", "/rawdata"),
+        in1=lambda wildcards: query(id=wildcards.id)["fq1"],
+        in2=lambda wildcards: query(id=wildcards.id)["fq2"],
     output:
         out1="outputs/afqc/{id}/{id}_1.fastq.gz",
         out2="outputs/afqc/{id}/{id}_2.fastq.gz",
@@ -201,10 +199,10 @@ rule rsem_prep_ref: # 把參考基因組的fasta和gtf檔案轉成RSEM的專用i
             > {log}
         """
 
-rule rsem_cal_exp:
+rule rsem_cal_exp: # 把每個樣本的reads定量，算出每個基因的表現量
     threads: 12
     conda:
-        "env/2023aut_ginger.yaml"
+        "envs/2023aut_ginger.yaml"
     input:
         ref_dir="references/rsem/",
         fq1="outputs/afqc/{id}/{id}_1.fastq.gz",
@@ -222,10 +220,8 @@ rule rsem_cal_exp:
         "logs/rsem/rsem_cal_exp/{id}.log"
     shell:
         """
-        # create output directory
-        mkdir -p $(dirname {output})
+        mkdir -p $(dirname {output.dout})
 
-        # calculate expression
         rsem-calculate-expression \
             --paired-end \
             --num-threads {threads} \
@@ -238,4 +234,21 @@ rule rsem_cal_exp:
             {params.output_prefix} \
         2>&1 \
         > {log}
+        """
+
+rule rsem_dmat: # 合併所有樣本的基因表現量，把每個樣本的變成一個矩陣
+    conda:
+        "envs/2023aut_ginger.yaml"
+    input:
+        expand(
+            "outputs/rsem-cal-expr/{id}/{id}.genes.results",
+            id=[d["id"] for d in config["samples"]]
+        )
+    output:
+        "outputs/rsem-dmat/all.rcounts.genes.matrix"
+    log:
+        "logs/rsem/rsem_dmat.log"
+    shell:
+        """
+        rsem-generate-data-matrix {input} 1> {output} 2> {log}
         """
