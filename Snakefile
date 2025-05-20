@@ -252,3 +252,128 @@ rule rsem_dmat: # 合併所有樣本的基因表現量，把每個樣本的變�
         """
         rsem-generate-data-matrix {input} 1> {output} 2> {log}
         """
+
+#先下載蛋白質需要檔案，範例裡面沒有
+# ==============================================================================
+rule download_protein_Phytozome:
+    output:
+        pth_Phytozome= "references/ath/Phytozome/PhytozomeV9/Athaliana/annotation/Athaliana_167_protein_primaryTranscriptOnly.fa.gz", 
+        
+    log:
+        Phy = "logs/protein/download_protein_by_PhytozomeV9.log", 
+
+    shell:
+        """
+        mkdir -p $(dirname {output.pth_Phytozome})
+
+        curl --cookie jgi_session=/api/sessions/cd06972c4cb4c428ce4e5fbc06d50599 --output {output.pth_Phytozome} -d '{{"ids":{{"Phytozome-167":{{"file_ids":["52b9c702166e730e43a34e56"],"top_hit":"53112a1b49607a1be0055860"}}}},"api_version":"2"}}' -H "Content-Type: application/json" https://files-download.jgi.doe.gov/filedownload/ \
+            2> {log.Phy} \
+            1> {log.Phy}
+        """
+
+rule unzip_protein_Phytozome:
+    input:
+        "references/ath/Phytozome/PhytozomeV9/Athaliana/annotation/Athaliana_167_protein_primaryTranscriptOnly.fa.gz"
+    output:
+        "references/ath/Phytozome/PhytozomeV9/Athaliana/annotation/Athaliana_167_protein_primaryTranscriptOnly.fa"
+    log:
+        "logs/protein/unzip_protein_by_PhytozomeV9.log"
+    shell:
+        """  
+            unzip -o -d $(dirname {input}) {input} >> {log} 2>&1
+
+            find $(dirname {input}) -name "*.fa.gz" -exec gunzip -c {{}} \; > {output}
+            awk '/^>/{{f=1}} f' {output} > {output}.tmp
+            mv {output}.tmp {output}
+        """
+
+rule download_protein_NCBI:
+    output:
+        pth_ncbi= "references/ginger_protein/protein.faa.zip"
+    log:
+        "logs/protein/download_protein_by_NCBI.log"
+    shell:
+        """
+        mkdir -p $(dirname {output.pth_ncbi})
+        docker run \
+            {docker_mount_opt} \
+            --rm \
+            -u $(id -u) \
+            --name ncbi_dload_dehydrated \
+            ccc/ncbi-datasets:20230926 \
+                datasets download genome accession GCF_018446385.1 \
+                    --include protein \
+                    --filename {output.pth_ncbi} \
+                    
+                2> {log} \
+                1> {log} 
+        """
+rule unzip_protein_NCBI:
+    input:
+        "references/ginger_protein/protein.faa.zip"
+    output:
+        "references/ginger_protein/ncbi_dataset/data/GCF_018446385.1/protein.faa"
+    log:
+        "logs/protein/unzip_protein_by_NCBI.log"
+    shell:
+        """
+        unzip -o -d $(dirname {input}) {input}
+        """
+
+# GSEA
+# ==============================================================================
+# make blast database
+rule makeblastdb:
+    input:
+        "references/ath/Phytozome/PhytozomeV9/Athaliana/annotation/Athaliana_167_protein_primaryTranscriptOnly.fa"
+    output:
+        "references/ath/Phytozome/PhytozomeV9/Athaliana/annotation/Athaliana_167_protein_primaryTranscriptOnly.fa.psq"
+    log:
+        "logs/blastp/makeblastdb.log"
+    shell:
+        """
+        docker run \
+            {docker_mount_opt} \
+            --rm \
+            -u $(id -u) \
+            --name makeblastdb \
+            biocontainers/blast:v2.2.31_cv2 \
+                makeblastdb \
+                    -in {input} \
+                    -dbtype prot \
+                    2> {log} \
+                    1> {log}
+        """
+
+
+# blast ginger proteins against arabidopsis protein
+rule blastp:
+    threads: 24
+    input:
+        query="references/ginger_protein/ncbi_dataset/data/GCF_018446385.1/protein.faa",
+        db="references/ath/Phytozome/PhytozomeV9/Athaliana/annotation/Athaliana_167_protein_primaryTranscriptOnly.fa"
+    output:
+        "outputs/blastp/ginger_vs_ath.tsv"
+    log:
+        "logs/blastp/ginger_vs_ath.log"
+    shell:
+        """
+        mkdir -p $(dirname {output})
+        docker run \
+            {docker_mount_opt} \
+            --rm \
+            -u $(id -u) \
+            --name blastp \
+            biocontainers/blast:v2.2.31_cv2 \
+                blastp \
+                    -query {input.query} \
+                    -db {input.db} \
+                    -out {output} \
+                    -outfmt 6 \
+                    -num_alignments 1 \
+                    -num_threads {threads} \
+                    2> {log} \
+                    1> {log}
+        """
+
+

@@ -1,0 +1,7 @@
+```{r}
+library(DESeq2)
+library(magrittr)
+library(pheatmap)
+library(dendsort)
+library(ggplot2)
+```
