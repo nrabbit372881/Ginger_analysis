@@ -11,6 +11,12 @@
             "virtual": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824056/1xRNAseq_lib_H201SC23051673_SAM20230824056/01.RawData",
             "mode": "ro",
             "is_workdir": 0
+        },
+        {
+            "real": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData",
+            "virtual": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData",
+            "mode": "ro",
+            "is_workdir": 0
         }
     ],
 
@@ -158,6 +164,81 @@
             "biorep": 3,
             "fq1": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824056/1xRNAseq_lib_H201SC23051673_SAM20230824056/01.RawData/Water_R3/Water_R3_CKDL230028122-1A_225VNWLT3_L4_1.fq.gz",
             "fq2": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824056/1xRNAseq_lib_H201SC23051673_SAM20230824056/01.RawData/Water_R3/Water_R3_CKDL230028122-1A_225VNWLT3_L4_2.fq.gz"
+        },
+
+
+
+        {
+            "id": "CK_R1",
+            "treatment": "CK",
+            "tissue": "root",
+            "biorep": 1,
+            "fq1": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/CK_R1/CK_R1_CKDL230028042-1A_225YKNLT3_L6_1.fq.gz",
+            "fq2": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/CK_R1/CK_R1_CKDL230028042-1A_225YKNLT3_L6_2.fq.gz"
+        },
+        {
+            "id": "CK_R2",
+            "treatment": "CK",
+            "tissue": "root",
+            "biorep": 2,
+            "fq1": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/CK_R2/CK_R2_CKDL230028042-1A_225YKNLT3_L6_1.fq.gz",
+            "fq2": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/CK_R2/CK_R2_CKDL230028042-1A_225YKNLT3_L6_2.fq.gz"
+        },
+        {
+            "id": "CK_R3",
+            "treatment": "CK",
+            "tissue": "root",
+            "biorep": 3,
+            "fq1": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/CK_R3/CK_R3_CKDL230028042-1A_225YKNLT3_L6_1.fq.gz",
+            "fq2": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/CK_R3/CK_R3_CKDL230028042-1A_225YKNLT3_L6_2.fq.gz"
+        },
+        {
+            "id": "LETC_R1",
+            "treatment": "LETC",
+            "tissue": "root",
+            "biorep": 1,
+            "fq1": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/LETC_R1/LETC_R1_CKDL230028042-1A_225YKNLT3_L6_1.fq.gz",
+            "fq2": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/LETC_R1/LETC_R1_CKDL230028042-1A_225YKNLT3_L6_2.fq.gz"
+        },
+        {
+            "id": "LETC_R2",
+            "treatment": "LETC",
+            "tissue": "root",
+            "biorep": 2,
+            "fq1": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/LETC_R2/LETC_R2_CKDL230028042-1A_225YKNLT3_L6_1.fq.gz",
+            "fq2": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/LETC_R2/LETC_R2_CKDL230028042-1A_225YKNLT3_L6_2.fq.gz"
+        },
+        {
+            "id": "LETC_R3",
+            "treatment": "LETC",
+            "tissue": "root",
+            "biorep": 3,
+            "fq1": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/LETC_R3/LETC_R3_CKDL230028042-1A_225YKNLT3_L6_1.fq.gz",
+            "fq2": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/LETC_R3/LETC_R3_CKDL230028042-1A_225YKNLT3_L6_2.fq.gz"
+        },
+        {
+            "id": "LITR_R1",
+            "treatment": "LITR",
+            "tissue": "root",
+            "biorep": 1,
+            "fq1": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/LITR_R1/LITR_R1_CKDL230028042-1A_225YKNLT3_L6_1.fq.gz",
+            "fq2": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/LITR_R1/LITR_R1_CKDL230028042-1A_225YKNLT3_L6_2.fq.gz"
+        },
+        {
+            "id": "LITR_R2",
+            "treatment": "LITR",
+            "tissue": "root",
+            "biorep": 2,
+            "fq1": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/LITR_R2/LITR_R2_CKDL230028042-1A_225YKNLT3_L6_1.fq.gz",
+            "fq2": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/LITR_R2/LITR_R2_CKDL230028042-1A_225YKNLT3_L6_1.fq.gz"
+        },
+        {
+            "id": "LITR_R3",
+            "treatment": "LITR",
+            "tissue": "root",
+            "biorep": 3,
+            "fq1": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/LITR_R3/LITR_R3_CKDL230028042-1A_225YKNLT3_L6_1.fq.gz",
+            "fq2": "/home/woodydrylab/YCLlab_raw_data/Short-term/download_20230920_RNA_Ginger_root/rawdata/H201SC23051673_SAM20230824053/1xRNAseq_lib_H201SC23051673_SAM20230824053/01.RawData/LITR_R3/LITR_R3_CKDL230028042-1A_225YKNLT3_L6_2.fq.gz"
         }
     ]   
 

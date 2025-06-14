@@ -1,0 +1,135 @@
+```{R}
+library(DESeq2)
+library(magrittr)
+library(pheatmap)
+library(dendsort)
+library(ggplot2)
+```
+
+
+
+```{R}
+run <- function(cmd) {
+  cat(">", cmd, "\n", eval(parse(text = cmd)), "\n") # 字串cmd轉換成R可以執行的表達式
+}
+```
+
+
+
+```{R}
+# import, rename column read counts matrix
+cts <- as.matrix(
+  read.table(
+    "outputs/rsem-dmat/all.rcounts.genes.matrix",
+    row.names = 1
+  )
+)
+gnames <- colnames(cts) %>% sapply(function(x){strsplit(x, "[.]")[[1]][5]})
+colnames(cts) <- gnames
+
+# check dim 
+run("dim(cts); # dim before")
+
+
+
+# filtering before plotting gene expression heat map
+keep <- !rowAlls(cts == 0)
+cts <- cts[keep, ]
+
+# check dim 
+run("dim(cts); # dim after")
+```
+
+Define functions `callback` for reordering clustering object and function `tell_batch` that return batch number according to input group name
+
+```{R}
+# define callback function
+callback = function(hc, ...){dendsort(hc)}
+
+# define tell_batch function
+tell_batch <- function(x){
+  ifelse(grepl("CK|LETC|LITR", x), "Batch2", "Batch1")
+}
+
+# create column annotation
+annotation_col = data.frame(
+    Batch = factor(sapply(gnames, tell_batch)) 
+)
+rownames(annotation_col) = gnames
+
+# create ann_color
+ann_colors = list(
+    Batch = c(Batch1 = "#1B9E77", Batch2 = "#D95F02")
+)
+```
+
+```{R}
+# get Batch1 data
+cts <- cts[, annotation_col == "Batch1"] 
+
+# sort `cts` by average gene expression level of group "Water"
+cts <- cts[
+  order(
+    cts[, (c("Water_R1", "Water_R2", "Water_R3"))] %>% rowSums,
+    decreasing = TRUE
+  ),
+]
+```
+
+Mask genes <= 10 in all sample; sort matrix by Water
+
+```{R}
+any_gt10 <- rowAnys(cts > 10)
+cts_any_gt10 <- cts[any_gt10, ]
+pheatmap(
+  log10(cts_any_gt10 + 1),
+  annotation_col = annotation_col,
+  annotation_colors = ann_colors,
+  cluster_rows=FALSE,
+  cluster_cols=FALSE,
+  show_rownames = FALSE,
+  color = colorRampPalette(c("navy", "white", "firebrick3"))(10),
+  clustering_callback = callback,
+  na_col = "green",
+  cutree_cols = 13,
+  main = "log10 read counts; mask all <= 10, sort by CK",
+  filename = "outputs/rmd-output/batch1_ge_heatmap_log10RC_mask=all_lt10_sort_by=CK.png"
+)
+```
+
+Scale (center) data in columns direction; exclude LITR_R2 #因為batch2也是一樣的程式碼的原因嗎
+
+```{R}
+cts_any_gt10_excl_LITR_R2 <- cts_any_gt10
+pheatmap(
+  log10(cts_any_gt10_excl_LITR_R2 + 1), 
+  color = colorRampPalette(c("navy", "white", "firebrick3"))(10),
+  na_col = "green",
+  show_rownames = FALSE,
+  scale = "column",
+  cluster_rows=FALSE,
+  cluster_cols=FALSE,
+  clustering_callback = callback,
+  cutree_cols = 13,
+  main = "log10 read counts; mask all <= 10, sort by Water, scale by col",
+  filename = "outputs/rmd-output/batch1_ge_heatmap_log10RC_mask=all_lt10_sort_by=CK_exclude=LITR_R2_scale=col.png"
+)
+```
+
+Scale (center) data in columns direction; exclude LITR_R2; cluster by column
+
+```{R}
+pheatmap(
+  log10(cts_any_gt10_excl_LITR_R2 + 1), 
+  color = colorRampPalette(c("navy", "white", "firebrick3"))(10),
+  na_col = "green",
+  show_rownames = FALSE,
+  scale = "column",
+  cluster_rows=FALSE,
+  cluster_cols=TRUE,
+  clustering_callback = callback,
+  cutree_cols = 5,
+  main = "log10 read counts; mask all <= 10, sort by Water, scale by col, cluster by col",
+  filename = "outputs/rmd-output/batch1_ge_heatmap_log10RC_mask=all_lt10_sort_by=CK_exclude=LITR_R2_scale=col_cluster_col=T.png"
+)
+```

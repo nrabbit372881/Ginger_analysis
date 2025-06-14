@@ -376,4 +376,3 @@ rule blastp:
                     1> {log}
         """
 
-

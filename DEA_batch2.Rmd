@@ -9,8 +9,8 @@ library(ggplot2)
 Set global variables
 
 ```{r}
-batch <- "Batch1"
-control <- "Water"
+batch <- "Batch2"
+control <- "CK"
 exclude <- c("LITR_R2")
 ```
 
@@ -41,6 +41,9 @@ cts <- as.matrix(
 )
 gnames <- colnames(cts) %>% sapply(function(x){strsplit(x, "[.]")[[1]][5]})
 colnames(cts) <- gnames
+
+table(sapply(gnames, tell_batch, exclude = exclude))
+
 cts <- cts[, sapply(gnames, tell_batch, exclude = exclude) == batch]
 
 
@@ -61,7 +64,7 @@ summary(any_gt10)
 Plot read count heat map
 
 ```{R}
-any_gt10 <- any_gt10[ # 根據 Water中 rowSums (1.2.3加總)的大小排序，重新排列所有基因的 row
+any_gt10 <- any_gt10[ # 根據 CK 中 rowSums (1.2.3加總)的大小排序，重新排列所有基因的 row
   order(
     rowSums(any_gt10[, grep(control, colnames(any_gt10))]),
     decreasing = TRUE
@@ -79,7 +82,7 @@ pheatmap( #做熱圖
   clustering_callback = callback,
   scale = "column",
   na_col = "green",
-  cutree_cols = 6,
+  cutree_cols = 3,
   filename = sprintf(
     "outputs/rmd-output/ge_heatmap_log10RC_%s_mask=all_lt10_sort_by=%s_scale_by=col_cluster_col=T.png",
     batch,
@@ -149,7 +152,7 @@ for (t in treatments) {
   de_tmp <- as.data.frame(
         results(
           dds,
-          contrast = c("condition", t, "Water"),
+          contrast = c("condition", t, control),
           alpha = FDR,
           lfcThreshold = FCT
         )
@@ -169,12 +172,10 @@ for (t in treatments) {
 }
 write.table(
   abd_table,
-  "outputs/rmd-output/Batch1.csv",
-  sep = ",",
+  sprintf("outputs/rmd-output/%s.csv", batch),
+  sep = ","
 )
-```
 
-```{r}
 ```
 
 Draw volcano plots (Facet grid)
