@@ -136,7 +136,7 @@ rule fastp:
 # The GTF file might be corrupted!
 # Stop at line : NC_044775.1      RefSeq  transcript      73009   148317  .       ?       .       gene_id "F6E76_pgp044"; transcript_id "unassigned_transcript_1917"; exception "trans-splicing"; gbkey "mRNA"; gene "rps12"; locus_tag "F6E76_pgp044"; transcript_biotype "mRNA"; 
 # Error Message: Strand is neither '+' nor '-'!
-rule filter_gtf_strand:### 因為出現了上面錯誤，這個rule是用來過濾掉gtf檔案中strand不是+或-的行
+rule filter_gtf_strand:### 因為出現了上面錯誤，這個rule是用來過濾掉gtf檔案中strand是?的行
     input:
         "references/ncbi_dataset/data/GCF_018446385.1/genomic.gtf"
     output:
