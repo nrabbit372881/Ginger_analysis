@@ -149,7 +149,7 @@ rule filter_gtf_strand:### 因為出現了上面錯誤，這個rule是用來過�
         """
 
 # According to the GTF file given, transcript unassigned_transcript_1917 has exons from different orientations!
-### 理論上應該不能直接刪掉？
+### 直接刪掉？
 rule filter_unassigned_transcript:
     input:
         "references/ncbi_dataset/data/GCF_018446385.1/genomic.filtered.gtf"
