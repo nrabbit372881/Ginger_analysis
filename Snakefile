@@ -73,7 +73,7 @@ rule ncbi_rehydrate:
                 1> {log}
         """
 
-rule remove_ambigous: # 自己找不到，不需要看是怎麼找的
+rule remove_ambigous: # 不用問為甚麼
     input:
         "references/ncbi_dataset/data/GCF_018446385.1/genomic.gtf"
     output:
@@ -149,7 +149,7 @@ rule filter_gtf_strand:### 因為出現了上面錯誤，這個rule是用來過�
         """
 
 # According to the GTF file given, transcript unassigned_transcript_1917 has exons from different orientations!
-### 理論上應該不能直接刪掉？要記得問出現這個狀況的處理方式
+### 理論上應該不能直接刪掉？
 rule filter_unassigned_transcript:
     input:
         "references/ncbi_dataset/data/GCF_018446385.1/genomic.filtered.gtf"
@@ -253,7 +253,7 @@ rule rsem_dmat: # 合併所有樣本的基因表現量，把每個樣本的變�
         rsem-generate-data-matrix {input} 1> {output} 2> {log}
         """
 
-#先下載蛋白質需要檔案，範例裡面沒有
+#先下載蛋白質需要檔案
 # ==============================================================================
 rule download_protein_Phytozome:
     output:
@@ -265,12 +265,12 @@ rule download_protein_Phytozome:
     shell:
         """
         mkdir -p $(dirname {output.pth_Phytozome})
-
         curl --cookie jgi_session=/api/sessions/cd06972c4cb4c428ce4e5fbc06d50599 --output {output.pth_Phytozome} -d '{{"ids":{{"Phytozome-167":{{"file_ids":["52b9c702166e730e43a34e56"],"top_hit":"53112a1b49607a1be0055860"}}}},"api_version":"2"}}' -H "Content-Type: application/json" https://files-download.jgi.doe.gov/filedownload/ \
+
             2> {log.Phy} \
             1> {log.Phy}
         """
-
+#之後要打開csv檔案看file_id之後再重新用curl下載一次(改file id)才是真正的txt檔案，阿記得解壓縮
 rule unzip_protein_Phytozome:
     input:
         "references/ath/Phytozome/PhytozomeV9/Athaliana/annotation/Athaliana_167_protein_primaryTranscriptOnly.fa.gz"

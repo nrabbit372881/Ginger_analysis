@@ -110,22 +110,28 @@ colnames(ath_p2g) <- c("pid", "gid")
 rownames(ath_p2g) <- ath_p2g[, 1]
 ```
 
-### Get Batch 1 DESeq2 results
+### Get Batch 2 DESeq2 results
 
 ```{r}
-dds <- readRDS(file = "outputs/rmd-output/deseq.Batch1.RDS")
+dds <- readRDS(file = "outputs/rmd-output/deseq.Batch2.RDS")
 resnames <- DESeq2::resultsNames(dds)
 print(resnames)
 ```
 
-#### Group "condition_RKN_vs_Water"
+
+
+
+
+
+
+#### Group "condition_LETC_vs_CK"
 
 Get DEGs
 
 ```{r}
 FDR <- 0.05
 FCThreashold <- 1.5
-name <- resnames[6]
+name <- "condition_LETC_vs_CK"
 res <- results(
     dds,
     alpha = FDR,
@@ -136,6 +142,7 @@ res <- results(
 # print results
 res
 ```
+
 #找DEG上下調基因
 ```{r} 
 DEGs_up <- subset(
@@ -239,7 +246,7 @@ Results retrieved from PlantGSEA
 ```{bash}
 wget \
   --directory-prefix=outputs/PlantGSEA/condition_RKN_vs_Water/up/ \
-  http://structuralbiology.cau.edu.cn/PlantGSEA/tmp/584592614.sorted_detail2
+  http://structuralbiology.cau.edu.cn/PlantGSEA/tmp/362703666.sorted_detail2
 ```
 
 2.  Down-regulated
@@ -274,27 +281,30 @@ cat(
 ```{bash}
 wget \
   --directory-prefix=outputs/PlantGSEA/condition_RKN_vs_Water/down/ \
-  http://structuralbiology.cau.edu.cn/PlantGSEA/tmp/638093431.sorted_detail2
+  http://structuralbiology.cau.edu.cn/PlantGSEA/tmp/252656794.sorted_detail2
 ```
 
-#### Group "condition_Clean_vs_Water"
+#### Group "condition_LITR_vs_CK"
 
 Get DEGs
 
 ```{r}
 FDR <- 0.05
 FCThreashold <- 1.5
-name <- "condition_Clean_vs_Water"
+name <- "condition_LITR_vs_CK"
 res <- results(
     dds,
     alpha = FDR,
     lfcThreshold = FCThreashold,
     name = name
 )
+
+# print results
 res
 ```
 
-```{r}
+#找DEG上下調基因
+```{r} 
 DEGs_up <- subset(
   res,
   (res$padj < 0.05) & (res$log2FoldChange > 1.5)
@@ -305,153 +315,30 @@ DEGs_dn <- subset(
 ) %>% rownames
 ```
 
-```{r}
-where_l2fc <- abs(res$log2FoldChange) > 1.5
-where_adjp <- res$padj < 0.05
-
-# filter NA
-where_l2fc[is.na(where_l2fc)] <- FALSE
-where_adjp[is.na(where_adjp)] <- FALSE
-
-# filtered
-filtered_res <- res[where_adjp & where_l2fc, ]
-
-# sorted
-final_res <- filtered_res[order(filtered_res$padj), ]
-
-
-# get corresponding Ath gene ID
-agids <- rownames(final_res) %>% 
-  sapply(., function(x){
-    blastp_res$ath_gid[which(blastp_res$ginger_gid == x)[1]]
-  })
-final_res$ath_best_hit <- agids
-
-
-# export result
-write.csv(
-  final_res[final_res$log2FoldChange > 0,],
-  file = sprintf("outputs/rmd-output/DEG-table/DEG.up.%s.csv", name),
-  row.names = TRUE,
-  quote = FALSE
-)
-write.csv(
-  final_res[final_res$log2FoldChange < 0,],
-  file = sprintf("outputs/rmd-output/DEG-table/DEG.dn.%s.csv", name),
-  row.names = TRUE,
-  quote = FALSE
-)
-```
-
-Match Ginger DEG gene ID to *A. thaliana* gene ID
-
-1.  Up-regulated
+Export filtered DEGs: \|log2 fold change\| \> 1.5; adjusted p-value \< 0.05
 
 ```{r}
-curated_gp2g <- subset(ginger_p2g, (ginger_p2g[, 2] %in% DEGs_up))
-curated_blastp_res <- subset(blastp_res, blastp_res$V1 %in% curated_gp2g[, 1])
-curated_blastp_res$apid <- curated_blastp_res$V2 %>% sapply(
-  function(x){strsplit(x, split = "[|]") %>% unlist %>% extract(1)}
-)
-# curated_ap2g <- subset(ath_p2g, ath_p2g[, 1] %in% curated_blastp_res$apid)
-# ggids <- curated_blastp_res$V1 %>% 
-#   sapply(.,
-#     function(x) {
-#       curated_gp2g[x, 2]
-#     }
-#   )
-agids_up <- curated_blastp_res$apid %>%
-  sapply(.,
-    function(x) {
-      strsplit(x, split = "[.]") %>% unlist %>% extract(1)
-    }
-  ) %>% 
+ggids <- sapply(blastp_res$V1, function(x){ # blastp_res 只有蛋白質對蛋白質的對應，不包含基因資訊，GSEA 要的是基因 ID不是蛋白 ID，所以要對回去原本的結果找出其他資訊
+  if (x %in% rownames(ginger_p2g)) {
+    return(ginger_p2g[x, 2])
+  } else {
+    return("Unmatched")
+  }
+})
+blastp_res$ginger_gid <- ggids
+blastp_res$ath_gid <- sapply(
+  blastp_res$V2, function(x) {
+    strsplit(x, split = "[.]") %>% unlist %>% extract(1)
+  }) %>% 
   unname
-cat(
-  agids_up,
-  sep = "\n",
-  file = sprintf("outputs/rmd-output/%s.up.txt", name)
-)
-```
-
-Results retrieved from PlantGSEA
-
-```{bash}
-wget \
-  --directory-prefix=outputs/PlantGSEA/condition_Clean_vs_Water/up/ \
-  http://structuralbiology.cau.edu.cn/PlantGSEA/tmp/339295365.sorted_detail2
-```
-
-2.  Down-regulated
-
-```{r}
-curated_gp2g <- subset(ginger_p2g, (ginger_p2g[, 2] %in% DEGs_dn))
-curated_blastp_res <- subset(blastp_res, blastp_res$V1 %in% curated_gp2g[, 1])
-curated_blastp_res$apid <- curated_blastp_res$V2 %>% sapply(
-  function(x){strsplit(x, split = "[|]") %>% unlist %>% extract(1)}
-)
-# curated_ap2g <- subset(ath_p2g, ath_p2g[, 1] %in% curated_blastp_res$apid)
-# ggids <- curated_blastp_res$V1 %>% 
-#   sapply(.,
-#     function(x) {
-#       curated_gp2g[x, 2]
-#     }
-#   )
-agids_dn <- curated_blastp_res$apid %>%
-  sapply(.,
-    function(x) {
-      strsplit(x, split = "[.]") %>% unlist %>% extract(1)
-    }
-  ) %>% 
-  unname
-cat(
-  agids_dn,
-  sep = "\n",
-  file = sprintf("outputs/rmd-output/%s.dn.txt", name)
-)
-```
-
-ID: 734261425
-
-```{bash}
-wget \
-  --directory-prefix=outputs/PlantGSEA/condition_Clean_vs_Water/down/ \
-  http://structuralbiology.cau.edu.cn/PlantGSEA/tmp/734261425.sorted_detail2
-```
-
-#### Group "condition_KHY26_vs_Water"
-
-Get DEGs
-
-```{r}
-FDR <- 0.05
-FCThreashold <- 1.5
-name <- "condition_KHY26_vs_Water"
-res <- results(
-    dds,
-    alpha = FDR,
-    lfcThreshold = FCThreashold,
-    name = name
-)
-res
-```
-
-```{r}
-DEGs_up <- subset(
-  res,
-  (res$padj < 0.05) & (res$log2FoldChange > 1.5)
-) %>% rownames
-DEGs_dn <- subset(
-  res,
-  (res$padj < 0.05) & (res$log2FoldChange < -1.5)
-) %>% rownames
+blastp_res <- blastp_res[order(blastp_res$V11), ]
 ```
 
 ```{r}
 where_l2fc <- abs(res$log2FoldChange) > 1.5
 where_adjp <- res$padj < 0.05
 
-# filter NA
+# filter NA #如果 log2FoldChange 或 padj 是 NA，就當作不顯著處理，防止錯誤
 where_l2fc[is.na(where_l2fc)] <- FALSE
 where_adjp[is.na(where_adjp)] <- FALSE
 
@@ -463,8 +350,8 @@ final_res <- filtered_res[order(filtered_res$padj), ]
 
 # get corresponding Ath gene ID
 agids <- rownames(final_res) %>% 
-  sapply(., function(x){
-    blastp_res$ath_gid[which(blastp_res$ginger_gid == x)[1]]
+  sapply(., function(x){ #在 %>% 中的 . 是「目前傳入的物件」
+    blastp_res$ath_gid[which(blastp_res$ginger_gid == x)[1]] #which(...)[1]：只取第一個 match的index，避免重複對應。
   })
 final_res$ath_best_hit <- agids
 
@@ -517,9 +404,7 @@ cat(
 Results retrieved from PlantGSEA
 
 ```{bash}
-wget \
-  --directory-prefix=outputs/PlantGSEA/condition_KHY26_vs_Water/up/ \
-  http://structuralbiology.cau.edu.cn/PlantGSEA/tmp/473055549.sorted_detail2
+上面file為空檔案
 ```
 
 2.  Down-regulated
@@ -553,145 +438,6 @@ cat(
 
 ```{bash}
 wget \
-  --directory-prefix=outputs/PlantGSEA/condition_KHY26_vs_Water/down/ \
-  http://structuralbiology.cau.edu.cn/PlantGSEA/tmp/772943429.sorted_detail2
+  --directory-prefix=outputs/PlantGSEA/condition_RKN_vs_Water/down/ \
+  http://structuralbiology.cau.edu.cn/PlantGSEA/tmp/224849810.sorted_detail2
 ```
-
-#### Group "condition_Chitin_vs_Water"
-
-Get DEGs
-
-```{r}
-FDR <- 0.05
-FCThreashold <- 1.5
-name <- "condition_Chitin_vs_Water"
-res <- results(
-    dds,
-    alpha = FDR,
-    lfcThreshold = FCThreashold,
-    name = name
-)
-res
-```
-
-```{r}
-DEGs_up <- subset(
-  res,
-  (res$padj < 0.05) & (res$log2FoldChange > 1.5)
-) %>% rownames
-DEGs_dn <- subset(
-  res,
-  (res$padj < 0.05) & (res$log2FoldChange < -1.5)
-) %>% rownames
-```
-
-```{r}
-where_l2fc <- abs(res$log2FoldChange) > 1.5
-where_adjp <- res$padj < 0.05
-
-# filter NA
-where_l2fc[is.na(where_l2fc)] <- FALSE
-where_adjp[is.na(where_adjp)] <- FALSE
-
-# filtered
-filtered_res <- res[where_adjp & where_l2fc, ]
-
-# sorted
-final_res <- filtered_res[order(filtered_res$padj), ]
-
-
-# get corresponding Ath gene ID
-agids <- rownames(final_res) %>% 
-  sapply(., function(x){
-    blastp_res$ath_gid[which(blastp_res$ginger_gid == x)[1]]
-  })
-final_res$ath_best_hit <- agids
-
-# export result
-write.csv(
-  final_res[final_res$log2FoldChange > 0,],
-  file = sprintf("outputs/rmd-output/DEG-table/DEG.up.%s.csv", name),
-  row.names = TRUE,
-  quote = FALSE
-)
-write.csv(
-  final_res[final_res$log2FoldChange < 0,],
-  file = sprintf("outputs/rmd-output/DEG-table/DEG.dn.%s.csv", name),
-  row.names = TRUE,
-  quote = FALSE
-)
-```
-
-Match Ginger DEG gene ID to *A. thaliana* gene ID
-
-1.  Up-regulated
-
-```{r}
-curated_gp2g <- subset(ginger_p2g, (ginger_p2g[, 2] %in% DEGs_up))
-curated_blastp_res <- subset(blastp_res, blastp_res$V1 %in% curated_gp2g[, 1])
-curated_blastp_res$apid <- curated_blastp_res$V2 %>% sapply(
-  function(x){strsplit(x, split = "[|]") %>% unlist %>% extract(1)}
-)
-# curated_ap2g <- subset(ath_p2g, ath_p2g[, 1] %in% curated_blastp_res$apid)
-# ggids <- curated_blastp_res$V1 %>% 
-#   sapply(.,
-#     function(x) {
-#       curated_gp2g[x, 2]
-#     }
-#   )
-agids_up <- curated_blastp_res$apid %>%
-  sapply(.,
-    function(x) {
-      strsplit(x, split = "[.]") %>% unlist %>% extract(1)
-    }
-  ) %>% 
-  unname
-cat(
-  agids_up,
-  sep = "\n",
-  file = sprintf("outputs/rmd-output/%s.up.txt", name)
-)
-```
-
-Results retrieved from PlantGSEA
-
-```{bash}
-wget \
-  --directory-prefix=outputs/PlantGSEA/condition_Chitin_vs_Water/up/ \
-  http://structuralbiology.cau.edu.cn/PlantGSEA/tmp/737623700.sorted_detail2
-```
-
-2.  Down-regulated
-
-```{r}
-curated_gp2g <- subset(ginger_p2g, (ginger_p2g[, 2] %in% DEGs_dn))
-curated_blastp_res <- subset(blastp_res, blastp_res$V1 %in% curated_gp2g[, 1])
-curated_blastp_res$apid <- curated_blastp_res$V2 %>% sapply(
-  function(x){strsplit(x, split = "[|]") %>% unlist %>% extract(1)}
-)
-# curated_ap2g <- subset(ath_p2g, ath_p2g[, 1] %in% curated_blastp_res$apid)
-# ggids <- curated_blastp_res$V1 %>% 
-#   sapply(.,
-#     function(x) {
-#       curated_gp2g[x, 2]
-#     }
-#   )
-agids_dn <- curated_blastp_res$apid %>%
-  sapply(.,
-    function(x) {
-      strsplit(x, split = "[.]") %>% unlist %>% extract(1)
-    }
-  ) %>% 
-  unname
-cat(
-  agids_dn,
-  sep = "\n",
-  file = sprintf("outputs/rmd-output/%s.dn.txt", name)
-)
-```
-
-```{bash}
-wget \
-  --directory-prefix=outputs/PlantGSEA/condition_Chitin_vs_Water/down/ \
-  http://structuralbiology.cau.edu.cn/PlantGSEA/tmp/686384382.sorted_detail2
-``` 
